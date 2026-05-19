@@ -1,0 +1,724 @@
+# Loads default set of integrations. Do not remove.
+default_config:
+
+frontend:
+  themes: !include_dir_merge_named themes
+  extra_module_url:
+  - /hacsfiles/lovelace-card-mod/card-mod.js?hacstag=190927524421
+
+automation: !include automations.yaml
+script: !include scripts.yaml
+scene: !include scenes.yaml
+
+http:
+  use_x_forwarded_for: true
+  trusted_proxies:
+    - 192.168.10.11
+    - 192.168.20.19
+
+rest_command:
+  fortigate_poe_disable_port8:
+    url: "https://192.168.20.1:8443/api/v2/cmdb/switch-controller/managed-switch/S124EP5919001611/ports/port8"
+    method: put
+    headers:
+      Authorization: "Bearer 7zsg0p9rbmk80qGzg9twcb9q9cqqmH"
+      Content-Type: "application/json"
+    payload: '{"poe-status":"disable"}'
+    verify_ssl: false
+  fortigate_poe_enable_port8:
+    url: "https://192.168.20.1:8443/api/v2/cmdb/switch-controller/managed-switch/S124EP5919001611/ports/port8"
+    method: put
+    headers:
+      Authorization: "Bearer 7zsg0p9rbmk80qGzg9twcb9q9cqqmH"
+      Content-Type: "application/json"
+    payload: '{"poe-status":"enable"}'
+    verify_ssl: false
+
+waste_collection_schedule:
+  sources:
+    - name: brisbane_qld_gov_au
+      args:
+        suburb: Chapel Hill
+        street_name: Carissa Pl
+        street_number: 7
+      customize:
+        - type: rubbish
+          alias: Rubbish
+          icon: mdi:trash-can
+        - type: recycle
+          alias: Recycle
+          icon: mdi:recycle
+
+homeassistant:
+  auth_mfa_modules:
+    - type: totp
+
+spotcast:
+  sp_dc: !secret sp_dc
+  sp_key: !secret sp_key
+
+zha:
+  custom_quirks_path: /config/zhaquirks
+
+sensor:
+  - platform: time_date
+    display_options:
+      - 'date_time_iso'
+
+#recorder:
+#  include:
+#    entities:
+#      - sensor.archie_balance_calculated
+#      - sensor.harry_balance_calculated
+#      - sensor.bella_balance_calculated
+#      - sensor.choreboard_completed_chores
+#      - sensor.choreboard_open_chores
+
+template:
+  - sensor:
+      - name: "Todays Energy Cost"
+        unique_id: todays_energy_cost
+        unit_of_measurement: "AUD"
+        device_class: monetary
+        state_class: measurement
+        icon: mdi:currency-usd
+        state: >
+          {% set daily_charge     = 0.474 %}
+          {% set peak_import      = states('sensor.tarrif11_peak')      | float(0) %}
+          {% set shoulder_import  = states('sensor.tarrif11_shoulder')  | float(0) %}
+          {% set export_high      = states('sensor.grid_export_battery')      | float(0) %}
+          {% set export_low       = states('sensor.grid_export_low')       | float(0) %}
+          {% set import_cost   = (peak_import * 0.462) + (shoulder_import * 0.319) %}
+          {% set export_credit = (export_high * 0.15)  + (export_low * 0.06) %}
+          {{ (daily_charge + import_cost - export_credit) | round(2) }}
+  - sensor:
+      - name: "Daily Energy Supply Charge"
+        unique_id: daily_energy_supply_charge
+        unit_of_measurement: "kWh"
+        device_class: energy
+        state_class: total_increasing
+        state: "{{ (((as_timestamp(states('sensor.date_time_iso')) / 3600) - 454585) | int) / 2400 }}"
+        attributes:
+          last_reset: '1970-01-01T00:00:00+00:00'
+      - name: "ChoreBoard Data"
+        unique_id: choreboard_data_sensor
+        state: "{{ now().strftime('%Y-%m-%d %H:%M') }}"
+        attributes:
+          chores: >
+            {% set ns = namespace(chores=[]) %}
+            {%- for i in range(1, 21) -%}
+              {%- if states('input_boolean.chore_' ~ i ~ '_enable') == 'on' -%}
+                {%- set child_name = states('input_select.chore_' ~ i ~ '_child') -%}
+                {% set chore_dict = {
+                  'day': states('input_select.chore_' ~ i ~ '_day') | int(0),
+                  'owner': child_name,
+                  'ownerIndex': (0 if child_name == 'archie' else (1 if child_name == 'harry' else 2)),
+                  'title': states('input_text.chore_' ~ i ~ '_title'),
+                  'price': (states('input_number.chore_' ~ i ~ '_price') | float(0.0)),
+                  'timeLimit': states('input_text.chore_' ~ i ~ '_time'),
+                  'completed': states('input_boolean.chore_' ~ i ~ '_done') == 'on'
+                } %}
+                {% set ns.chores = ns.chores + [chore_dict] %}
+              {%- endif -%}
+            {%- endfor -%}
+            {{ ns.chores }}
+      - name: "Archie Balance Calculated"
+        unique_id: archie_balance_calculated
+        unit_of_measurement: "$"
+        state_class: measurement
+        device_class: monetary
+        state: >
+          {% set total = namespace(value=0.0) %}
+          {%- for i in range(1, 21) -%}
+            {%- if is_state('input_boolean.chore_' ~ i ~ '_enable','on') and is_state('input_select.chore_' ~ i ~ '_child','archie') and is_state('input_boolean.chore_' ~ i ~ '_done','on') -%}
+              {% set total.value = total.value + (states('input_number.chore_' ~ i ~ '_price') | float(0)) %}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ '%.2f' | format(total.value) }}
+      - name: "Harry Balance Calculated"
+        unique_id: harry_balance_calculated
+        unit_of_measurement: "$"
+        state_class: measurement
+        device_class: monetary
+        state: >
+          {% set total = namespace(value=0.0) %}
+          {%- for i in range(1, 21) -%}
+            {%- if is_state('input_boolean.chore_' ~ i ~ '_enable','on') and is_state('input_select.chore_' ~ i ~ '_child','harry') and is_state('input_boolean.chore_' ~ i ~ '_done','on') -%}
+              {% set total.value = total.value + (states('input_number.chore_' ~ i ~ '_price') | float(0)) %}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ '%.2f' | format(total.value) }}
+      - name: "Bella Balance Calculated"
+        unique_id: bella_balance_calculated
+        unit_of_measurement: "$"
+        state_class: measurement
+        device_class: monetary
+        state: >
+          {% set total = namespace(value=0.0) %}
+          {%- for i in range(1, 21) -%}
+            {%- if is_state('input_boolean.chore_' ~ i ~ '_enable','on') and is_state('input_select.chore_' ~ i ~ '_child','bella') and is_state('input_boolean.chore_' ~ i ~ '_done','on') -%}
+              {% set total.value = total.value + (states('input_number.chore_' ~ i ~ '_price') | float(0)) %}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ '%.2f' | format(total.value) }}
+      - name: "ChoreBoard Open Chores"
+        unique_id: choreboard_open_chores
+        unit_of_measurement: "chores"
+        state_class: measurement
+        state: >
+          {% set total = namespace(value=0) %}
+          {%- for i in range(1, 21) -%}
+            {%- if is_state('input_boolean.chore_' ~ i ~ '_enable','on') and is_state('input_boolean.chore_' ~ i ~ '_done','off') -%}
+              {% set total.value = total.value + 1 %}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ total.value }}
+      - name: "ChoreBoard Completed Chores"
+        unique_id: choreboard_completed_chores
+        unit_of_measurement: "chores"
+        state_class: measurement
+        state: >
+          {% set total = namespace(value=0) %}
+          {%- for i in range(1, 21) -%}
+            {%- if is_state('input_boolean.chore_' ~ i ~ '_enable','on') and is_state('input_boolean.chore_' ~ i ~ '_done','on') -%}
+              {% set total.value = total.value + 1 %}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ total.value }}
+      - name: "ChoreBoard Archie Open"
+        unique_id: choreboard_archie_open
+        unit_of_measurement: "chores"
+        state_class: measurement
+        state: >
+          {% set total = namespace(value=0) %}
+          {%- for i in range(1, 21) -%}
+            {%- if is_state('input_boolean.chore_' ~ i ~ '_enable','on') and is_state('input_select.chore_' ~ i ~ '_child','archie') and is_state('input_boolean.chore_' ~ i ~ '_done','off') -%}
+              {% set total.value = total.value + 1 %}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ total.value }}
+      - name: "ChoreBoard Harry Open"
+        unique_id: choreboard_harry_open
+        unit_of_measurement: "chores"
+        state_class: measurement
+        state: >
+          {% set total = namespace(value=0) %}
+          {%- for i in range(1, 21) -%}
+            {%- if is_state('input_boolean.chore_' ~ i ~ '_enable','on') and is_state('input_select.chore_' ~ i ~ '_child','harry') and is_state('input_boolean.chore_' ~ i ~ '_done','off') -%}
+              {% set total.value = total.value + 1 %}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ total.value }}
+      - name: "ChoreBoard Bella Open"
+        unique_id: choreboard_bella_open
+        unit_of_measurement: "chores"
+        state_class: measurement
+        state: >
+          {% set total = namespace(value=0) %}
+          {%- for i in range(1, 21) -%}
+            {%- if is_state('input_boolean.chore_' ~ i ~ '_enable','on') and is_state('input_select.chore_' ~ i ~ '_child','bella') and is_state('input_boolean.chore_' ~ i ~ '_done','off') -%}
+              {% set total.value = total.value + 1 %}
+            {%- endif -%}
+          {%- endfor -%}
+          {{ total.value }}
+
+  - trigger:
+      - platform: time_pattern
+        seconds: "/5"
+    sensor:
+      - name: "Electricity Cost Device 5sec"
+        unique_id: electricity_cost_device_5sec
+        device_class: monetary
+        unit_of_measurement: "$"
+        state: "{{ ((states('sensor.athom_energy_monitor_029e90_power_2') | float / 720000) * (states('select.tarrif11') | float)) + (range(1,99) | random)/1000000000 }}"
+
+# -----------------------
+# INPUT HELPERS (LEFT MARGIN)
+# -----------------------
+input_text:
+  chore_1_title:
+    name: "Chore 1 - Task"
+    max: 31
+  chore_1_time:
+    name: "Chore 1 - Time"
+    max: 15
+  chore_2_title:
+    name: "Chore 2 - Task"
+    max: 31
+  chore_2_time:
+    name: "Chore 2 - Time"
+    max: 15
+  chore_3_title:
+    name: "Chore 3 - Task"
+    max: 31
+  chore_3_time:
+    name: "Chore 3 - Time"
+    max: 15
+  chore_4_title:
+    name: "Chore 4 - Task"
+    max: 31
+  chore_4_time:
+    name: "Chore 4 - Time"
+    max: 15
+  chore_5_title:
+    name: "Chore 5 - Task"
+    max: 31
+  chore_5_time:
+    name: "Chore 5 - Time"
+    max: 15
+  chore_6_title:
+    name: "Chore 6 - Task"
+    max: 31
+  chore_6_time:
+    name: "Chore 6 - Time"
+    max: 15
+  chore_7_title:
+    name: "Chore 7 - Task"
+    max: 31
+  chore_7_time:
+    name: "Chore 7 - Time"
+    max: 15
+  chore_8_title:
+    name: "Chore 8 - Task"
+    max: 31
+  chore_8_time:
+    name: "Chore 8 - Time"
+    max: 15
+  chore_9_title:
+    name: "Chore 9 - Task"
+    max: 31
+  chore_9_time:
+    name: "Chore 9 - Time"
+    max: 15
+  chore_10_title:
+    name: "Chore 10 - Task"
+    max: 31
+  chore_10_time:
+    name: "Chore 10 - Time"
+    max: 15
+  chore_11_title:
+    name: "Chore 11 - Task"
+    max: 31
+  chore_11_time:
+    name: "Chore 11 - Time"
+    max: 15
+  chore_12_title:
+    name: "Chore 12 - Task"
+    max: 31
+  chore_12_time:
+    name: "Chore 12 - Time"
+    max: 15
+  chore_13_title:
+    name: "Chore 13 - Task"
+    max: 31
+  chore_13_time:
+    name: "Chore 13 - Time"
+    max: 15
+  chore_14_title:
+    name: "Chore 14 - Task"
+    max: 31
+  chore_14_time:
+    name: "Chore 14 - Time"
+    max: 15
+  chore_15_title:
+    name: "Chore 15 - Task"
+    max: 31
+  chore_15_time:
+    name: "Chore 15 - Time"
+    max: 15
+  chore_16_title:
+    name: "Chore 16 - Task"
+    max: 31
+  chore_16_time:
+    name: "Chore 16 - Time"
+    max: 15
+  chore_17_title:
+    name: "Chore 17 - Task"
+    max: 31
+  chore_17_time:
+    name: "Chore 17 - Time"
+    max: 15
+  chore_18_title:
+    name: "Chore 18 - Task"
+    max: 31
+  chore_18_time:
+    name: "Chore 18 - Time"
+    max: 15
+  chore_19_title:
+    name: "Chore 19 - Task"
+    max: 31
+  chore_19_time:
+    name: "Chore 19 - Time"
+    max: 15
+  chore_20_title:
+    name: "Chore 20 - Task"
+    max: 31
+  chore_20_time:
+    name: "Chore 20 - Time"
+    max: 15
+
+input_boolean:
+  chore_1_enable:
+    name: "Chore 1 Enable"
+  chore_1_done:
+    name: "Chore 1 Done"
+  chore_1_edit_mode:
+    name: "Chore 1 Edit"
+  chore_2_enable:
+    name: "Chore 2 Enable"
+  chore_2_done:
+    name: "Chore 2 Done"
+  chore_2_edit_mode:
+    name: "Chore 2 Edit"
+  chore_3_enable:
+    name: "Chore 3 Enable"
+  chore_3_done:
+    name: "Chore 3 Done"
+  chore_3_edit_mode:
+    name: "Chore 3 Edit"
+  chore_4_enable:
+    name: "Chore 4 Enable"
+  chore_4_done:
+    name: "Chore 4 Done"
+  chore_4_edit_mode:
+    name: "Chore 4 Edit"
+  chore_5_enable:
+    name: "Chore 5 Enable"
+  chore_5_done:
+    name: "Chore 5 Done"
+  chore_5_edit_mode:
+    name: "Chore 5 Edit"
+  chore_6_enable:
+    name: "Chore 6 Enable"
+  chore_6_done:
+    name: "Chore 6 Done"
+  chore_6_edit_mode:
+    name: "Chore 6 Edit"
+  chore_7_enable:
+    name: "Chore 7 Enable"
+  chore_7_done:
+    name: "Chore 7 Done"
+  chore_7_edit_mode:
+    name: "Chore 7 Edit"
+  chore_8_enable:
+    name: "Chore 8 Enable"
+  chore_8_done:
+    name: "Chore 8 Done"
+  chore_8_edit_mode:
+    name: "Chore 8 Edit"
+  chore_9_enable:
+    name: "Chore 9 Enable"
+  chore_9_done:
+    name: "Chore 9 Done"
+  chore_9_edit_mode:
+    name: "Chore 9 Edit"
+  chore_10_enable:
+    name: "Chore 10 Enable"
+  chore_10_done:
+    name: "Chore 10 Done"
+  chore_10_edit_mode:
+    name: "Chore 10 Edit"
+  chore_11_enable:
+    name: "Chore 11 Enable"
+  chore_11_done:
+    name: "Chore 11 Done"
+  chore_11_edit_mode:
+    name: "Chore 11 Edit"
+  chore_12_enable:
+    name: "Chore 12 Enable"
+  chore_12_done:
+    name: "Chore 12 Done"
+  chore_12_edit_mode:
+    name: "Chore 12 Edit"
+  chore_13_enable:
+    name: "Chore 13 Enable"
+  chore_13_done:
+    name: "Chore 13 Done"
+  chore_13_edit_mode:
+    name: "Chore 13 Edit"
+  chore_14_enable:
+    name: "Chore 14 Enable"
+  chore_14_done:
+    name: "Chore 14 Done"
+  chore_14_edit_mode:
+    name: "Chore 14 Edit"
+  chore_15_enable:
+    name: "Chore 15 Enable"
+  chore_15_done:
+    name: "Chore 15 Done"
+  chore_15_edit_mode:
+    name: "Chore 15 Edit"
+  chore_16_enable:
+    name: "Chore 16 Enable"
+  chore_16_done:
+    name: "Chore 16 Done"
+  chore_16_edit_mode:
+    name: "Chore 16 Edit"
+  chore_17_enable:
+    name: "Chore 17 Enable"
+  chore_17_done:
+    name: "Chore 17 Done"
+  chore_17_edit_mode:
+    name: "Chore 17 Edit"
+  chore_18_enable:
+    name: "Chore 18 Enable"
+  chore_18_done:
+    name: "Chore 18 Done"
+  chore_18_edit_mode:
+    name: "Chore 18 Edit"
+  chore_19_enable:
+    name: "Chore 19 Enable"
+  chore_19_done:
+    name: "Chore 19 Done"
+  chore_19_edit_mode:
+    name: "Chore 19 Edit"
+  chore_20_enable:
+    name: "Chore 20 Enable"
+  chore_20_done:
+    name: "Chore 20 Done"
+  chore_20_edit_mode:
+    name: "Chore 20 Edit"
+
+input_number:
+  chore_1_price:
+    name: "Chore 1 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_2_price:
+    name: "Chore 2 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_3_price:
+    name: "Chore 3 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_4_price:
+    name: "Chore 4 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_5_price:
+    name: "Chore 5 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_6_price:
+    name: "Chore 6 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_7_price:
+    name: "Chore 7 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_8_price:
+    name: "Chore 8 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_9_price:
+    name: "Chore 9 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_10_price:
+    name: "Chore 10 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_11_price:
+    name: "Chore 11 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_12_price:
+    name: "Chore 12 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_13_price:
+    name: "Chore 13 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_14_price:
+    name: "Chore 14 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_15_price:
+    name: "Chore 15 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_16_price:
+    name: "Chore 16 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_17_price:
+    name: "Chore 17 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_18_price:
+    name: "Chore 18 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_19_price:
+    name: "Chore 19 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+  chore_20_price:
+    name: "Chore 20 Price"
+    min: 0
+    max: 100
+    step: 0.1
+    mode: box
+
+input_select:
+  chore_1_child:
+    name: "Chore 1 Child"
+    options: ["archie", "harry", "bella"]
+  chore_1_day:
+    name: "Chore 1 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_2_child:
+    name: "Chore 2 Child"
+    options: ["archie", "harry", "bella"]
+  chore_2_day:
+    name: "Chore 2 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_3_child:
+    name: "Chore 3 Child"
+    options: ["archie", "harry", "bella"]
+  chore_3_day:
+    name: "Chore 3 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_4_child:
+    name: "Chore 4 Child"
+    options: ["archie", "harry", "bella"]
+  chore_4_day:
+    name: "Chore 4 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_5_child:
+    name: "Chore 5 Child"
+    options: ["archie", "harry", "bella"]
+  chore_5_day:
+    name: "Chore 5 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_6_child:
+    name: "Chore 6 Child"
+    options: ["archie", "harry", "bella"]
+  chore_6_day:
+    name: "Chore 6 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_7_child:
+    name: "Chore 7 Child"
+    options: ["archie", "harry", "bella"]
+  chore_7_day:
+    name: "Chore 7 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_8_child:
+    name: "Chore 8 Child"
+    options: ["archie", "harry", "bella"]
+  chore_8_day:
+    name: "Chore 8 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_9_child:
+    name: "Chore 9 Child"
+    options: ["archie", "harry", "bella"]
+  chore_9_day:
+    name: "Chore 9 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_10_child:
+    name: "Chore 10 Child"
+    options: ["archie", "harry", "bella"]
+  chore_10_day:
+    name: "Chore 10 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_11_child:
+    name: "Chore 11 Child"
+    options: ["archie", "harry", "bella"]
+  chore_11_day:
+    name: "Chore 11 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_12_child:
+    name: "Chore 12 Child"
+    options: ["archie", "harry", "bella"]
+  chore_12_day:
+    name: "Chore 12 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_13_child:
+    name: "Chore 13 Child"
+    options: ["archie", "harry", "bella"]
+  chore_13_day:
+    name: "Chore 13 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_14_child:
+    name: "Chore 14 Child"
+    options: ["archie", "harry", "bella"]
+  chore_14_day:
+    name: "Chore 14 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_15_child:
+    name: "Chore 15 Child"
+    options: ["archie", "harry", "bella"]
+  chore_15_day:
+    name: "Chore 15 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_16_child:
+    name: "Chore 16 Child"
+    options: ["archie", "harry", "bella"]
+  chore_16_day:
+    name: "Chore 16 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_17_child:
+    name: "Chore 17 Child"
+    options: ["archie", "harry", "bella"]
+  chore_17_day:
+    name: "Chore 17 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_18_child:
+    name: "Chore 18 Child"
+    options: ["archie", "harry", "bella"]
+  chore_18_day:
+    name: "Chore 18 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_19_child:
+    name: "Chore 19 Child"
+    options: ["archie", "harry", "bella"]
+  chore_19_day:
+    name: "Chore 19 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
+  chore_20_child:
+    name: "Chore 20 Child"
+    options: ["archie", "harry", "bella"]
+  chore_20_day:
+    name: "Chore 20 Day"
+    options: ["0", "1", "2", "3", "4", "5", "6"]
