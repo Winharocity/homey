@@ -1,0 +1,1552 @@
+# Full monolithic Home Assistant configuration for ChoreBoard
+# Fixed version with corrected script names, recorder config, and improved logic
+
+default_config:
+
+frontend:
+  themes: {}
+
+# -----------------------
+# RECORDER - Required for history graphs
+# -----------------------
+recorder:
+  include:
+    entities:
+      - sensor.archie_balance_calculated
+      - sensor.harry_balance_calculated
+      - sensor.bella_balance_calculated
+      - sensor.choreboard_completed_chores
+      - sensor.choreboard_open_chores
+      - sensor.choreboard_archie_open
+      - sensor.choreboard_harry_open
+      - sensor.choreboard_bella_open
+
+# -----------------------
+# AUTOMATIONS
+# -----------------------
+automation:
+  - id: 'chore_completion_ui_notify'
+    alias: 'Chore Completion — UI Notification'
+    description: 'Send a persistent notification when any chore Completed boolean turns ON'
+    trigger:
+      - platform: state
+        entity_id:
+          - input_boolean.chore_1_done
+          - input_boolean.chore_2_done
+          - input_boolean.chore_3_done
+          - input_boolean.chore_4_done
+          - input_boolean.chore_5_done
+          - input_boolean.chore_6_done
+          - input_boolean.chore_7_done
+          - input_boolean.chore_8_done
+          - input_boolean.chore_9_done
+          - input_boolean.chore_10_done
+          - input_boolean.chore_11_done
+          - input_boolean.chore_12_done
+          - input_boolean.chore_13_done
+          - input_boolean.chore_14_done
+          - input_boolean.chore_15_done
+          - input_boolean.chore_16_done
+          - input_boolean.chore_17_done
+          - input_boolean.chore_18_done
+          - input_boolean.chore_19_done
+          - input_boolean.chore_20_done
+        to: 'on'
+    condition: []
+    action:
+      - service: persistent_notification.create
+        data:
+          title: "Chore Completed"
+          message: >
+            {% set ent = trigger.entity_id %}
+            {% set idx = ent.split('_')[2] %}
+            {% set title = states('input_text.chore_' ~ idx ~ '_title') %}
+            {% set child = states('input_select.chore_' ~ idx ~ '_child') %}
+            {% set price = states('input_number.chore_' ~ idx ~ '_price') %}
+            Chore {{ idx }} completed: "{{ title }}" ({{ child | title }}) — ${{ price }}.
+    mode: queued
+    max: 10
+
+  - id: 'set_chore_completed_from_device'
+    alias: "Set Chore Completed from ChoreBoard Device"
+    description: "Handles /api/events/choreboard_chore_completed from ESP MCU"
+    trigger:
+      - platform: event
+        event_type: choreboard_chore_completed
+    action:
+      - variables:
+          data: "{{ trigger.event.data }}"
+      - service: input_boolean.turn_on
+        target:
+          entity_id: >
+            {% set target_title = data.title %}
+            {% set target_owner_index = data.ownerIndex | int %}
+            {% for i in range(1, 21) %}
+              {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+              {% set t_name = states('input_text.chore_' ~ i ~ '_title') %}
+              {% set t_child_idx = ['archie','harry','bella'].index(states('input_select.chore_' ~ i ~ '_child')) %}
+              {% if enabled and t_name == target_title and t_child_idx == target_owner_index %}
+                {{ 'input_boolean.chore_' ~ i ~ '_done' }}
+              {% endif %}
+            {% endfor %}
+    mode: single
+
+
+# -----------------------
+# SCRIPTS
+# -----------------------
+script:
+  # Fixed script names to match dashboard calls
+  clear_completed_chores_archie:
+    alias: "Clear Completed Chores - Archie"
+    sequence:
+      - repeat:
+          count: 20
+          sequence:
+            - variables:
+                idx: "{{ repeat.index }}"
+            - if:
+                - condition: template
+                  value_template: >
+                    {{ is_state('input_boolean.chore_' ~ idx ~ '_enable', 'on') and
+                       is_state('input_select.chore_' ~ idx ~ '_child', 'archie') and
+                       is_state('input_boolean.chore_' ~ idx ~ '_done', 'on') }}
+              then:
+                - service: input_boolean.turn_off
+                  target:
+                    entity_id: "input_boolean.chore_{{ idx }}_done"
+      - service: persistent_notification.create
+        data:
+          title: "Payment Processed"
+          message: "Archie's completed chores have been cleared and marked as paid."
+
+  clear_completed_chores_harry:
+    alias: "Clear Completed Chores - Harry"
+    sequence:
+      - repeat:
+          count: 20
+          sequence:
+            - variables:
+                idx: "{{ repeat.index }}"
+            - if:
+                - condition: template
+                  value_template: >
+                    {{ is_state('input_boolean.chore_' ~ idx ~ '_enable', 'on') and
+                       is_state('input_select.chore_' ~ idx ~ '_child', 'harry') and
+                       is_state('input_boolean.chore_' ~ idx ~ '_done', 'on') }}
+              then:
+                - service: input_boolean.turn_off
+                  target:
+                    entity_id: "input_boolean.chore_{{ idx }}_done"
+      - service: persistent_notification.create
+        data:
+          title: "Payment Processed"
+          message: "Harry's completed chores have been cleared and marked as paid."
+
+  clear_completed_chores_bella:
+    alias: "Clear Completed Chores - Bella"
+    sequence:
+      - repeat:
+          count: 20
+          sequence:
+            - variables:
+                idx: "{{ repeat.index }}"
+            - if:
+                - condition: template
+                  value_template: >
+                    {{ is_state('input_boolean.chore_' ~ idx ~ '_enable', 'on') and
+                       is_state('input_select.chore_' ~ idx ~ '_child', 'bella') and
+                       is_state('input_boolean.chore_' ~ idx ~ '_done', 'on') }}
+              then:
+                - service: input_boolean.turn_off
+                  target:
+                    entity_id: "input_boolean.chore_{{ idx }}_done"
+      - service: persistent_notification.create
+        data:
+          title: "Payment Processed"
+          message: "Bella's completed chores have been cleared and marked as paid."
+  
+  add_chore_archie:
+    alias: "Add Chore for Archie"
+    sequence:
+      - service: script.enable_next_chore
+        data:
+          child: "archie"
+          
+  add_chore_harry:
+    alias: "Add Chore for Harry"
+    sequence:
+      - service: script.enable_next_chore
+        data:
+          child: "harry"
+          
+  add_chore_bella:
+    alias: "Add Chore for Bella"
+    sequence:
+      - service: script.enable_next_chore
+        data:
+          child: "bella"
+          
+  enable_next_chore:
+    alias: "Enable Next Available Chore Slot"
+    fields:
+      child:
+        description: "Which child to assign the chore to"
+        example: "archie"
+    sequence:
+      - variables:
+          child_val: "{{ child | default('archie') }}"
+          next_slot: >
+            {% set ranges = {'archie': (1, 7), 'harry': (8, 14), 'bella': (15, 20)} %}
+            {% set bounds = ranges.get(child_val) %}
+            {% set ns = namespace(found=0) %}
+            {% if bounds %}
+              {% for i in range(bounds[0], bounds[1] + 1) %}
+                {% if ns.found == 0 and states('input_boolean.chore_' ~ i ~ '_enable') == 'off' %}
+                  {% set ns.found = i %}
+                {% endif %}
+              {% endfor %}
+            {% else %}
+              {% set ns.found = -1 %}
+            {% endif %}
+            {{ ns.found }}
+      - if:
+          - condition: template
+            value_template: "{{ next_slot | int > 0 }}"
+        then:
+          - service: input_boolean.turn_on
+            target:
+              entity_id: "input_boolean.chore_{{ next_slot }}_enable"
+          - service: input_select.select_option
+            target:
+              entity_id: "input_select.chore_{{ next_slot }}_child"
+            data:
+              option: "{{ child_val }}"
+          - service: persistent_notification.create
+            data:
+              title: "Chore Slot Enabled"
+              message: "Chore {{ next_slot }} enabled for {{ child_val | title }}. Edit it in the Lists tab."
+        else:
+          - service: persistent_notification.create
+            data:
+              title: "No Available Slots"
+              message: >
+                {% if next_slot | int == -1 %}
+                  Unknown child "{{ child_val }}". Use archie, harry, or bella.
+                {% else %}
+                  No free slots for {{ child_val | title }}. Disable one of their chores to free up a slot.
+                {% endif %}
+
+# -----------------------
+# TEMPLATE SENSORS
+# -----------------------
+# -----------------------
+# TEMPLATE SENSORS
+# -----------------------
+template:
+  - sensor:
+      # --- Balance Calculators ---
+      - name: "Archie Balance Calculated"
+        unique_id: archie_balance_calculated
+        state: >
+          {% set total = namespace(value=0.0) %}
+          {% for i in range(1, 21) %}
+            {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+            {% set child = is_state('input_select.chore_' ~ i ~ '_child', 'archie') %}
+            {% set done = is_state('input_boolean.chore_' ~ i ~ '_done', 'on') %}
+            {% if enabled and child and done %}
+              {% set price = states('input_number.chore_' ~ i ~ '_price') | float(0) %}
+              {% set total.value = total.value + price %}
+            {% endif %}
+          {% endfor %}
+          {{ "%.2f" | format(total.value) }}
+        unit_of_measurement: "$"
+        icon: mdi:cash
+
+      - name: "Harry Balance Calculated"
+        unique_id: harry_balance_calculated
+        state: >
+          {% set total = namespace(value=0.0) %}
+          {% for i in range(1, 21) %}
+            {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+            {% set child = is_state('input_select.chore_' ~ i ~ '_child', 'harry') %}
+            {% set done = is_state('input_boolean.chore_' ~ i ~ '_done', 'on') %}
+            {% if enabled and child and done %}
+              {% set price = states('input_number.chore_' ~ i ~ '_price') | float(0) %}
+              {% set total.value = total.value + price %}
+            {% endif %}
+          {% endfor %}
+          {{ "%.2f" | format(total.value) }}
+        unit_of_measurement: "$"
+        icon: mdi:cash
+
+      - name: "Bella Balance Calculated"
+        unique_id: bella_balance_calculated
+        state: >
+          {% set total = namespace(value=0.0) %}
+          {% for i in range(1, 21) %}
+            {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+            {% set child = is_state('input_select.chore_' ~ i ~ '_child', 'bella') %}
+            {% set done = is_state('input_boolean.chore_' ~ i ~ '_done', 'on') %}
+            {% if enabled and child and done %}
+              {% set price = states('input_number.chore_' ~ i ~ '_price') | float(0) %}
+              {% set total.value = total.value + price %}
+            {% endif %}
+          {% endfor %}
+          {{ "%.2f" | format(total.value) }}
+        unit_of_measurement: "$"
+        icon: mdi:cash
+
+      # --- General Counters ---
+      - name: "Choreboard Open Chores"
+        unique_id: choreboard_open_chores
+        state: >
+          {% set count = namespace(value=0) %}
+          {% for i in range(1, 21) %}
+            {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+            {% set done = is_state('input_boolean.chore_' ~ i ~ '_done', 'on') %}
+            {% if enabled and not done %}
+              {% set count.value = count.value + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ count.value }}
+        icon: mdi:clipboard-text-outline
+
+      - name: "Choreboard Completed Chores"
+        unique_id: choreboard_completed_chores
+        state: >
+          {% set count = namespace(value=0) %}
+          {% for i in range(1, 21) %}
+            {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+            {% set done = is_state('input_boolean.chore_' ~ i ~ '_done', 'on') %}
+            {% if enabled and done %}
+              {% set count.value = count.value + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ count.value }}
+        icon: mdi:clipboard-check-outline
+
+      # --- Per-Child Open Counters ---
+      - name: "Choreboard Archie Open"
+        unique_id: choreboard_archie_open
+        state: >
+          {% set count = namespace(value=0) %}
+          {% for i in range(1, 21) %}
+            {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+            {% set child = is_state('input_select.chore_' ~ i ~ '_child', 'archie') %}
+            {% set done = is_state('input_boolean.chore_' ~ i ~ '_done', 'on') %}
+            {% if enabled and child and not done %}
+              {% set count.value = count.value + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ count.value }}
+        icon: mdi:clipboard-list
+
+      - name: "Choreboard Harry Open"
+        unique_id: choreboard_harry_open
+        state: >
+          {% set count = namespace(value=0) %}
+          {% for i in range(1, 21) %}
+            {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+            {% set child = is_state('input_select.chore_' ~ i ~ '_child', 'harry') %}
+            {% set done = is_state('input_boolean.chore_' ~ i ~ '_done', 'on') %}
+            {% if enabled and child and not done %}
+              {% set count.value = count.value + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ count.value }}
+        icon: mdi:clipboard-list
+
+      - name: "Choreboard Bella Open"
+        unique_id: choreboard_bella_open
+        state: >
+          {% set count = namespace(value=0) %}
+          {% for i in range(1, 21) %}
+            {% set enabled = is_state('input_boolean.chore_' ~ i ~ '_enable', 'on') %}
+            {% set child = is_state('input_select.chore_' ~ i ~ '_child', 'bella') %}
+            {% set done = is_state('input_boolean.chore_' ~ i ~ '_done', 'on') %}
+            {% if enabled and child and not done %}
+              {% set count.value = count.value + 1 %}
+            {% endif %}
+          {% endfor %}
+          {{ count.value }}
+        icon: mdi:clipboard-list
+
+# -----------------------
+# INPUT TEXT (titles & times)
+# -----------------------
+input_text:
+  chore_1_title:
+    name: "Chore 1 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_1_time:
+    name: "Chore 1 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_2_title:
+    name: "Chore 2 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_2_time:
+    name: "Chore 2 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_3_title:
+    name: "Chore 3 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_3_time:
+    name: "Chore 3 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_4_title:
+    name: "Chore 4 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_4_time:
+    name: "Chore 4 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_5_title:
+    name: "Chore 5 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_5_time:
+    name: "Chore 5 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_6_title:
+    name: "Chore 6 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_6_time:
+    name: "Chore 6 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_7_title:
+    name: "Chore 7 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_7_time:
+    name: "Chore 7 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_8_title:
+    name: "Chore 8 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_8_time:
+    name: "Chore 8 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_9_title:
+    name: "Chore 9 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_9_time:
+    name: "Chore 9 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_10_title:
+    name: "Chore 10 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_10_time:
+    name: "Chore 10 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_11_title:
+    name: "Chore 11 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_11_time:
+    name: "Chore 11 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_12_title:
+    name: "Chore 12 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_12_time:
+    name: "Chore 12 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_13_title:
+    name: "Chore 13 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_13_time:
+    name: "Chore 13 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_14_title:
+    name: "Chore 14 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_14_time:
+    name: "Chore 14 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_15_title:
+    name: "Chore 15 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_15_time:
+    name: "Chore 15 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_16_title:
+    name: "Chore 16 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_16_time:
+    name: "Chore 16 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_17_title:
+    name: "Chore 17 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_17_time:
+    name: "Chore 17 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_18_title:
+    name: "Chore 18 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_18_time:
+    name: "Chore 18 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_19_title:
+    name: "Chore 19 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_19_time:
+    name: "Chore 19 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+  chore_20_title:
+    name: "Chore 20 - Task"
+    initial: "New Chore"
+    max: 31
+  chore_20_time:
+    name: "Chore 20 - Time"
+    initial: "6:00 PM"
+    max: 15
+
+# -----------------------
+# INPUT BOOLEANS
+# -----------------------
+# -----------------------
+# INPUT BOOLEANS
+# -----------------------
+input_boolean:
+  # --- CHORE 1 ---
+  chore_1_edit_mode:
+    name: "Chore 1 Edit Mode"
+    initial: false
+  chore_1_enable:
+    name: "Chore 1 - Enable"
+    initial: false
+  chore_1_done:
+    name: "Chore 1 - Completed"
+    initial: false
+  chore_1_mon:
+    name: "Chore 1 - Monday"
+    initial: false
+  chore_1_tue:
+    name: "Chore 1 - Tuesday"
+    initial: false
+  chore_1_wed:
+    name: "Chore 1 - Wednesday"
+    initial: false
+  chore_1_thu:
+    name: "Chore 1 - Thursday"
+    initial: false
+  chore_1_fri:
+    name: "Chore 1 - Friday"
+    initial: false
+  chore_1_sat:
+    name: "Chore 1 - Saturday"
+    initial: false
+  chore_1_sun:
+    name: "Chore 1 - Sunday"
+    initial: false
+
+  # --- CHORE 2 ---
+  chore_2_edit_mode:
+    name: "Chore 2 Edit Mode"
+    initial: false
+  chore_2_enable:
+    name: "Chore 2 - Enable"
+    initial: false
+  chore_2_done:
+    name: "Chore 2 - Completed"
+    initial: false
+  chore_2_mon:
+    name: "Chore 2 - Monday"
+    initial: false
+  chore_2_tue:
+    name: "Chore 2 - Tuesday"
+    initial: false
+  chore_2_wed:
+    name: "Chore 2 - Wednesday"
+    initial: false
+  chore_2_thu:
+    name: "Chore 2 - Thursday"
+    initial: false
+  chore_2_fri:
+    name: "Chore 2 - Friday"
+    initial: false
+  chore_2_sat:
+    name: "Chore 2 - Saturday"
+    initial: false
+  chore_2_sun:
+    name: "Chore 2 - Sunday"
+    initial: false
+
+  # --- CHORE 3 ---
+  chore_3_edit_mode:
+    name: "Chore 3 Edit Mode"
+    initial: false
+  chore_3_enable:
+    name: "Chore 3 - Enable"
+    initial: false
+  chore_3_done:
+    name: "Chore 3 - Completed"
+    initial: false
+  chore_3_mon:
+    name: "Chore 3 - Monday"
+    initial: false
+  chore_3_tue:
+    name: "Chore 3 - Tuesday"
+    initial: false
+  chore_3_wed:
+    name: "Chore 3 - Wednesday"
+    initial: false
+  chore_3_thu:
+    name: "Chore 3 - Thursday"
+    initial: false
+  chore_3_fri:
+    name: "Chore 3 - Friday"
+    initial: false
+  chore_3_sat:
+    name: "Chore 3 - Saturday"
+    initial: false
+  chore_3_sun:
+    name: "Chore 3 - Sunday"
+    initial: false
+
+  # --- CHORE 4 ---
+  chore_4_edit_mode:
+    name: "Chore 4 Edit Mode"
+    initial: false
+  chore_4_enable:
+    name: "Chore 4 - Enable"
+    initial: false
+  chore_4_done:
+    name: "Chore 4 - Completed"
+    initial: false
+  chore_4_mon:
+    name: "Chore 4 - Monday"
+    initial: false
+  chore_4_tue:
+    name: "Chore 4 - Tuesday"
+    initial: false
+  chore_4_wed:
+    name: "Chore 4 - Wednesday"
+    initial: false
+  chore_4_thu:
+    name: "Chore 4 - Thursday"
+    initial: false
+  chore_4_fri:
+    name: "Chore 4 - Friday"
+    initial: false
+  chore_4_sat:
+    name: "Chore 4 - Saturday"
+    initial: false
+  chore_4_sun:
+    name: "Chore 4 - Sunday"
+    initial: false
+
+  # --- CHORE 5 ---
+  chore_5_edit_mode:
+    name: "Chore 5 Edit Mode"
+    initial: false
+  chore_5_enable:
+    name: "Chore 5 - Enable"
+    initial: false
+  chore_5_done:
+    name: "Chore 5 - Completed"
+    initial: false
+  chore_5_mon:
+    name: "Chore 5 - Monday"
+    initial: false
+  chore_5_tue:
+    name: "Chore 5 - Tuesday"
+    initial: false
+  chore_5_wed:
+    name: "Chore 5 - Wednesday"
+    initial: false
+  chore_5_thu:
+    name: "Chore 5 - Thursday"
+    initial: false
+  chore_5_fri:
+    name: "Chore 5 - Friday"
+    initial: false
+  chore_5_sat:
+    name: "Chore 5 - Saturday"
+    initial: false
+  chore_5_sun:
+    name: "Chore 5 - Sunday"
+    initial: false
+
+  # --- CHORE 6 ---
+  chore_6_edit_mode:
+    name: "Chore 6 Edit Mode"
+    initial: false
+  chore_6_enable:
+    name: "Chore 6 - Enable"
+    initial: false
+  chore_6_done:
+    name: "Chore 6 - Completed"
+    initial: false
+  chore_6_mon:
+    name: "Chore 6 - Monday"
+    initial: false
+  chore_6_tue:
+    name: "Chore 6 - Tuesday"
+    initial: false
+  chore_6_wed:
+    name: "Chore 6 - Wednesday"
+    initial: false
+  chore_6_thu:
+    name: "Chore 6 - Thursday"
+    initial: false
+  chore_6_fri:
+    name: "Chore 6 - Friday"
+    initial: false
+  chore_6_sat:
+    name: "Chore 6 - Saturday"
+    initial: false
+  chore_6_sun:
+    name: "Chore 6 - Sunday"
+    initial: false
+
+  # --- CHORE 7 ---
+  chore_7_edit_mode:
+    name: "Chore 7 Edit Mode"
+    initial: false
+  chore_7_enable:
+    name: "Chore 7 - Enable"
+    initial: false
+  chore_7_done:
+    name: "Chore 7 - Completed"
+    initial: false
+  chore_7_mon:
+    name: "Chore 7 - Monday"
+    initial: false
+  chore_7_tue:
+    name: "Chore 7 - Tuesday"
+    initial: false
+  chore_7_wed:
+    name: "Chore 7 - Wednesday"
+    initial: false
+  chore_7_thu:
+    name: "Chore 7 - Thursday"
+    initial: false
+  chore_7_fri:
+    name: "Chore 7 - Friday"
+    initial: false
+  chore_7_sat:
+    name: "Chore 7 - Saturday"
+    initial: false
+  chore_7_sun:
+    name: "Chore 7 - Sunday"
+    initial: false
+
+  # --- CHORE 8 ---
+  chore_8_edit_mode:
+    name: "Chore 8 Edit Mode"
+    initial: false
+  chore_8_enable:
+    name: "Chore 8 - Enable"
+    initial: false
+  chore_8_done:
+    name: "Chore 8 - Completed"
+    initial: false
+  chore_8_mon:
+    name: "Chore 8 - Monday"
+    initial: false
+  chore_8_tue:
+    name: "Chore 8 - Tuesday"
+    initial: false
+  chore_8_wed:
+    name: "Chore 8 - Wednesday"
+    initial: false
+  chore_8_thu:
+    name: "Chore 8 - Thursday"
+    initial: false
+  chore_8_fri:
+    name: "Chore 8 - Friday"
+    initial: false
+  chore_8_sat:
+    name: "Chore 8 - Saturday"
+    initial: false
+  chore_8_sun:
+    name: "Chore 8 - Sunday"
+    initial: false
+
+  # --- CHORE 9 ---
+  chore_9_edit_mode:
+    name: "Chore 9 Edit Mode"
+    initial: false
+  chore_9_enable:
+    name: "Chore 9 - Enable"
+    initial: false
+  chore_9_done:
+    name: "Chore 9 - Completed"
+    initial: false
+  chore_9_mon:
+    name: "Chore 9 - Monday"
+    initial: false
+  chore_9_tue:
+    name: "Chore 9 - Tuesday"
+    initial: false
+  chore_9_wed:
+    name: "Chore 9 - Wednesday"
+    initial: false
+  chore_9_thu:
+    name: "Chore 9 - Thursday"
+    initial: false
+  chore_9_fri:
+    name: "Chore 9 - Friday"
+    initial: false
+  chore_9_sat:
+    name: "Chore 9 - Saturday"
+    initial: false
+  chore_9_sun:
+    name: "Chore 9 - Sunday"
+    initial: false
+
+  # --- CHORE 10 ---
+  chore_10_edit_mode:
+    name: "Chore 10 Edit Mode"
+    initial: false
+  chore_10_enable:
+    name: "Chore 10 - Enable"
+    initial: false
+  chore_10_done:
+    name: "Chore 10 - Completed"
+    initial: false
+  chore_10_mon:
+    name: "Chore 10 - Monday"
+    initial: false
+  chore_10_tue:
+    name: "Chore 10 - Tuesday"
+    initial: false
+  chore_10_wed:
+    name: "Chore 10 - Wednesday"
+    initial: false
+  chore_10_thu:
+    name: "Chore 10 - Thursday"
+    initial: false
+  chore_10_fri:
+    name: "Chore 10 - Friday"
+    initial: false
+  chore_10_sat:
+    name: "Chore 10 - Saturday"
+    initial: false
+  chore_10_sun:
+    name: "Chore 10 - Sunday"
+    initial: false
+
+  # --- CHORE 11 ---
+  chore_11_edit_mode:
+    name: "Chore 11 Edit Mode"
+    initial: false
+  chore_11_enable:
+    name: "Chore 11 - Enable"
+    initial: false
+  chore_11_done:
+    name: "Chore 11 - Completed"
+    initial: false
+  chore_11_mon:
+    name: "Chore 11 - Monday"
+    initial: false
+  chore_11_tue:
+    name: "Chore 11 - Tuesday"
+    initial: false
+  chore_11_wed:
+    name: "Chore 11 - Wednesday"
+    initial: false
+  chore_11_thu:
+    name: "Chore 11 - Thursday"
+    initial: false
+  chore_11_fri:
+    name: "Chore 11 - Friday"
+    initial: false
+  chore_11_sat:
+    name: "Chore 11 - Saturday"
+    initial: false
+  chore_11_sun:
+    name: "Chore 11 - Sunday"
+    initial: false
+
+  # --- CHORE 12 ---
+  chore_12_edit_mode:
+    name: "Chore 12 Edit Mode"
+    initial: false
+  chore_12_enable:
+    name: "Chore 12 - Enable"
+    initial: false
+  chore_12_done:
+    name: "Chore 12 - Completed"
+    initial: false
+  chore_12_mon:
+    name: "Chore 12 - Monday"
+    initial: false
+  chore_12_tue:
+    name: "Chore 12 - Tuesday"
+    initial: false
+  chore_12_wed:
+    name: "Chore 12 - Wednesday"
+    initial: false
+  chore_12_thu:
+    name: "Chore 12 - Thursday"
+    initial: false
+  chore_12_fri:
+    name: "Chore 12 - Friday"
+    initial: false
+  chore_12_sat:
+    name: "Chore 12 - Saturday"
+    initial: false
+  chore_12_sun:
+    name: "Chore 12 - Sunday"
+    initial: false
+
+  # --- CHORE 13 ---
+  chore_13_edit_mode:
+    name: "Chore 13 Edit Mode"
+    initial: false
+  chore_13_enable:
+    name: "Chore 13 - Enable"
+    initial: false
+  chore_13_done:
+    name: "Chore 13 - Completed"
+    initial: false
+  chore_13_mon:
+    name: "Chore 13 - Monday"
+    initial: false
+  chore_13_tue:
+    name: "Chore 13 - Tuesday"
+    initial: false
+  chore_13_wed:
+    name: "Chore 13 - Wednesday"
+    initial: false
+  chore_13_thu:
+    name: "Chore 13 - Thursday"
+    initial: false
+  chore_13_fri:
+    name: "Chore 13 - Friday"
+    initial: false
+  chore_13_sat:
+    name: "Chore 13 - Saturday"
+    initial: false
+  chore_13_sun:
+    name: "Chore 13 - Sunday"
+    initial: false
+
+  # --- CHORE 14 ---
+  chore_14_edit_mode:
+    name: "Chore 14 Edit Mode"
+    initial: false
+  chore_14_enable:
+    name: "Chore 14 - Enable"
+    initial: false
+  chore_14_done:
+    name: "Chore 14 - Completed"
+    initial: false
+  chore_14_mon:
+    name: "Chore 14 - Monday"
+    initial: false
+  chore_14_tue:
+    name: "Chore 14 - Tuesday"
+    initial: false
+  chore_14_wed:
+    name: "Chore 14 - Wednesday"
+    initial: false
+  chore_14_thu:
+    name: "Chore 14 - Thursday"
+    initial: false
+  chore_14_fri:
+    name: "Chore 14 - Friday"
+    initial: false
+  chore_14_sat:
+    name: "Chore 14 - Saturday"
+    initial: false
+  chore_14_sun:
+    name: "Chore 14 - Sunday"
+    initial: false
+
+  # --- CHORE 15 ---
+  chore_15_edit_mode:
+    name: "Chore 15 Edit Mode"
+    initial: false
+  chore_15_enable:
+    name: "Chore 15 - Enable"
+    initial: false
+  chore_15_done:
+    name: "Chore 15 - Completed"
+    initial: false
+  chore_15_mon:
+    name: "Chore 15 - Monday"
+    initial: false
+  chore_15_tue:
+    name: "Chore 15 - Tuesday"
+    initial: false
+  chore_15_wed:
+    name: "Chore 15 - Wednesday"
+    initial: false
+  chore_15_thu:
+    name: "Chore 15 - Thursday"
+    initial: false
+  chore_15_fri:
+    name: "Chore 15 - Friday"
+    initial: false
+  chore_15_sat:
+    name: "Chore 15 - Saturday"
+    initial: false
+  chore_15_sun:
+    name: "Chore 15 - Sunday"
+    initial: false
+
+  # --- CHORE 16 ---
+  chore_16_edit_mode:
+    name: "Chore 16 Edit Mode"
+    initial: false
+  chore_16_enable:
+    name: "Chore 16 - Enable"
+    initial: false
+  chore_16_done:
+    name: "Chore 16 - Completed"
+    initial: false
+  chore_16_mon:
+    name: "Chore 16 - Monday"
+    initial: false
+  chore_16_tue:
+    name: "Chore 16 - Tuesday"
+    initial: false
+  chore_16_wed:
+    name: "Chore 16 - Wednesday"
+    initial: false
+  chore_16_thu:
+    name: "Chore 16 - Thursday"
+    initial: false
+  chore_16_fri:
+    name: "Chore 16 - Friday"
+    initial: false
+  chore_16_sat:
+    name: "Chore 16 - Saturday"
+    initial: false
+  chore_16_sun:
+    name: "Chore 16 - Sunday"
+    initial: false
+
+  # --- CHORE 17 ---
+  chore_17_edit_mode:
+    name: "Chore 17 Edit Mode"
+    initial: false
+  chore_17_enable:
+    name: "Chore 17 - Enable"
+    initial: false
+  chore_17_done:
+    name: "Chore 17 - Completed"
+    initial: false
+  chore_17_mon:
+    name: "Chore 17 - Monday"
+    initial: false
+  chore_17_tue:
+    name: "Chore 17 - Tuesday"
+    initial: false
+  chore_17_wed:
+    name: "Chore 17 - Wednesday"
+    initial: false
+  chore_17_thu:
+    name: "Chore 17 - Thursday"
+    initial: false
+  chore_17_fri:
+    name: "Chore 17 - Friday"
+    initial: false
+  chore_17_sat:
+    name: "Chore 17 - Saturday"
+    initial: false
+  chore_17_sun:
+    name: "Chore 17 - Sunday"
+    initial: false
+
+  # --- CHORE 18 ---
+  chore_18_edit_mode:
+    name: "Chore 18 Edit Mode"
+    initial: false
+  chore_18_enable:
+    name: "Chore 18 - Enable"
+    initial: false
+  chore_18_done:
+    name: "Chore 18 - Completed"
+    initial: false
+  chore_18_mon:
+    name: "Chore 18 - Monday"
+    initial: false
+  chore_18_tue:
+    name: "Chore 18 - Tuesday"
+    initial: false
+  chore_18_wed:
+    name: "Chore 18 - Wednesday"
+    initial: false
+  chore_18_thu:
+    name: "Chore 18 - Thursday"
+    initial: false
+  chore_18_fri:
+    name: "Chore 18 - Friday"
+    initial: false
+  chore_18_sat:
+    name: "Chore 18 - Saturday"
+    initial: false
+  chore_18_sun:
+    name: "Chore 18 - Sunday"
+    initial: false
+
+  # --- CHORE 19 ---
+  chore_19_edit_mode:
+    name: "Chore 19 Edit Mode"
+    initial: false
+  chore_19_enable:
+    name: "Chore 19 - Enable"
+    initial: false
+  chore_19_done:
+    name: "Chore 19 - Completed"
+    initial: false
+  chore_19_mon:
+    name: "Chore 19 - Monday"
+    initial: false
+  chore_19_tue:
+    name: "Chore 19 - Tuesday"
+    initial: false
+  chore_19_wed:
+    name: "Chore 19 - Wednesday"
+    initial: false
+  chore_19_thu:
+    name: "Chore 19 - Thursday"
+    initial: false
+  chore_19_fri:
+    name: "Chore 19 - Friday"
+    initial: false
+  chore_19_sat:
+    name: "Chore 19 - Saturday"
+    initial: false
+  chore_19_sun:
+    name: "Chore 19 - Sunday"
+    initial: false
+
+  # --- CHORE 20 ---
+  chore_20_edit_mode:
+    name: "Chore 20 Edit Mode"
+    initial: false
+  chore_20_enable:
+    name: "Chore 20 - Enable"
+    initial: false
+  chore_20_done:
+    name: "Chore 20 - Completed"
+    initial: false
+  chore_20_mon:
+    name: "Chore 20 - Monday"
+    initial: false
+  chore_20_tue:
+    name: "Chore 20 - Tuesday"
+    initial: false
+  chore_20_wed:
+    name: "Chore 20 - Wednesday"
+    initial: false
+  chore_20_thu:
+    name: "Chore 20 - Thursday"
+    initial: false
+  chore_20_fri:
+    name: "Chore 20 - Friday"
+    initial: false
+  chore_20_sat:
+    name: "Chore 20 - Saturday"
+    initial: false
+  chore_20_sun:
+    name: "Chore 20 - Sunday"
+    initial: false
+
+# -----------------------
+# INPUT NUMBERS
+# -----------------------
+input_number:
+  chore_1_price:
+    name: "Chore 1 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_2_price:
+    name: "Chore 2 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_3_price:
+    name: "Chore 3 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_4_price:
+    name: "Chore 4 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_5_price:
+    name: "Chore 5 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_6_price:
+    name: "Chore 6 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_7_price:
+    name: "Chore 7 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_8_price:
+    name: "Chore 8 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_9_price:
+    name: "Chore 9 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_10_price:
+    name: "Chore 10 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    # Continuation of configuration.yaml - INPUT NUMBERS 11-20 and INPUT SELECTS
+
+  chore_11_price:
+    name: "Chore 11 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_12_price:
+    name: "Chore 12 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_13_price:
+    name: "Chore 13 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_14_price:
+    name: "Chore 14 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_15_price:
+    name: "Chore 15 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_16_price:
+    name: "Chore 16 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_17_price:
+    name: "Chore 17 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_18_price:
+    name: "Chore 18 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_19_price:
+    name: "Chore 19 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+  chore_20_price:
+    name: "Chore 20 - Price"
+    min: 0
+    max: 9999
+    step: 0.25
+    initial: 2.00
+    mode: box
+
+# -----------------------
+# INPUT SELECTS
+# -----------------------
+input_select:
+  chore_1_day:
+    name: "Chore 1 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_1_child:
+    name: "Chore 1 - Child"
+    options: ["archie","harry","bella"]
+    initial: "archie"
+
+  chore_2_day:
+    name: "Chore 2 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_2_child:
+    name: "Chore 2 - Child"
+    options: ["archie","harry","bella"]
+    initial: "archie"
+
+  chore_3_day:
+    name: "Chore 3 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_3_child:
+    name: "Chore 3 - Child"
+    options: ["archie","harry","bella"]
+    initial: "archie"
+
+  chore_4_day:
+    name: "Chore 4 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_4_child:
+    name: "Chore 4 - Child"
+    options: ["archie","harry","bella"]
+    initial: "archie"
+
+  chore_5_day:
+    name: "Chore 5 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_5_child:
+    name: "Chore 5 - Child"
+    options: ["archie","harry","bella"]
+    initial: "archie"
+
+  chore_6_day:
+    name: "Chore 6 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_6_child:
+    name: "Chore 6 - Child"
+    options: ["archie","harry","bella"]
+    initial: "archie"
+
+  chore_7_day:
+    name: "Chore 7 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_7_child:
+    name: "Chore 7 - Child"
+    options: ["archie","harry","bella"]
+    initial: "archie"
+
+  chore_8_day:
+    name: "Chore 8 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_8_child:
+    name: "Chore 8 - Child"
+    options: ["archie","harry","bella"]
+    initial: "harry"
+
+  chore_9_day:
+    name: "Chore 9 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_9_child:
+    name: "Chore 9 - Child"
+    options: ["archie","harry","bella"]
+    initial: "harry"
+
+  chore_10_day:
+    name: "Chore 10 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_10_child:
+    name: "Chore 10 - Child"
+    options: ["archie","harry","bella"]
+    initial: "harry"
+
+  chore_11_day:
+    name: "Chore 11 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_11_child:
+    name: "Chore 11 - Child"
+    options: ["archie","harry","bella"]
+    initial: "harry"
+
+  chore_12_day:
+    name: "Chore 12 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_12_child:
+    name: "Chore 12 - Child"
+    options: ["archie","harry","bella"]
+    initial: "harry"
+
+  chore_13_day:
+    name: "Chore 13 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_13_child:
+    name: "Chore 13 - Child"
+    options: ["archie","harry","bella"]
+    initial: "harry"
+
+  chore_14_day:
+    name: "Chore 14 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_14_child:
+    name: "Chore 14 - Child"
+    options: ["archie","harry","bella"]
+    initial: "harry"
+
+  chore_15_day:
+    name: "Chore 15 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_15_child:
+    name: "Chore 15 - Child"
+    options: ["archie","harry","bella"]
+    initial: "bella"
+
+  chore_16_day:
+    name: "Chore 16 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_16_child:
+    name: "Chore 16 - Child"
+    options: ["archie","harry","bella"]
+    initial: "bella"
+
+  chore_17_day:
+    name: "Chore 17 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_17_child:
+    name: "Chore 17 - Child"
+    options: ["archie","harry","bella"]
+    initial: "bella"
+
+  chore_18_day:
+    name: "Chore 18 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_18_child:
+    name: "Chore 18 - Child"
+    options: ["archie","harry","bella"]
+    initial: "bella"
+
+  chore_19_day:
+    name: "Chore 19 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_19_child:
+    name: "Chore 19 - Child"
+    options: ["archie","harry","bella"]
+    initial: "bella"
+
+  chore_20_day:
+    name: "Chore 20 - Day"
+    options: ["0","1","2","3","4","5","6"]
+    initial: "0"
+  chore_20_child:
+    name: "Chore 20 - Child"
+    options: ["archie","harry","bella"]
+    initial: "bella"
