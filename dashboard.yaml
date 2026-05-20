@@ -225,12 +225,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_1_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_1_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -386,11 +391,19 @@ views:
                         entity: input_number.chore_1_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_1_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_1_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_1_done
                         name: Completed
@@ -493,12 +506,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_2_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_2_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -654,11 +672,19 @@ views:
                         entity: input_number.chore_2_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_2_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_2_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_2_done
                         name: Completed
@@ -761,12 +787,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_3_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_3_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -922,11 +953,19 @@ views:
                         entity: input_number.chore_3_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_3_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_3_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_3_done
                         name: Completed
@@ -1029,12 +1068,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_4_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_4_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -1190,11 +1234,19 @@ views:
                         entity: input_number.chore_4_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_4_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_4_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_4_done
                         name: Completed
@@ -1297,12 +1349,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_5_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_5_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -1458,11 +1515,19 @@ views:
                         entity: input_number.chore_5_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_5_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_5_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_5_done
                         name: Completed
@@ -1565,12 +1630,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_6_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_6_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -1726,11 +1796,19 @@ views:
                         entity: input_number.chore_6_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_6_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_6_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_6_done
                         name: Completed
@@ -1833,12 +1911,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_7_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_7_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -1994,11 +2077,19 @@ views:
                         entity: input_number.chore_7_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_7_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_7_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_7_done
                         name: Completed
@@ -2135,12 +2226,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_8_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_8_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -2296,11 +2392,19 @@ views:
                         entity: input_number.chore_8_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_8_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_8_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_8_done
                         name: Completed
@@ -2403,12 +2507,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_9_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_9_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -2564,11 +2673,19 @@ views:
                         entity: input_number.chore_9_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_9_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_9_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_9_done
                         name: Completed
@@ -2671,12 +2788,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_10_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_10_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -2832,11 +2954,19 @@ views:
                         entity: input_number.chore_10_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_10_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_10_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_10_done
                         name: Completed
@@ -2939,12 +3069,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_11_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_11_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -3100,11 +3235,19 @@ views:
                         entity: input_number.chore_11_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_11_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_11_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_11_done
                         name: Completed
@@ -3207,12 +3350,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_12_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_12_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -3368,11 +3516,19 @@ views:
                         entity: input_number.chore_12_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_12_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_12_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_12_done
                         name: Completed
@@ -3466,12 +3622,17 @@ views:
               cards:
                 - type: entities
                   show_header_toggle: false
+                  card_mod:
+                    style: |
+                      ha-card {
+                        z-index: 99 !important;
+                        position: relative !important;
+                        pointer-events: auto !important;
+                      }
                   entities:
-                    - type: custom:text-input-row
-                      entity: input_text.chore_13_title
-                      name: Time
-                      icon: mdi:clock-outline
-                      placeholder: HH:MM
+                    - entity: input_text.chore_13_title
+                      name: Chore Title
+                      icon: mdi:format-text
                 - type: custom:mushroom-chips-card
                   alignment: center
                   chips:
@@ -3627,11 +3788,19 @@ views:
                   entity: input_number.chore_13_price
                   name: Price
                   icon: mdi:cash
-                - type: custom:text-input-row
-                  entity: input_text.chore_13_time
-                  name: Time
-                  icon: mdi:clock-outline
-                  placeholder: HH:MM
+                - type: entities
+                  show_header_toggle: false
+                  card_mod:
+                    style: |
+                      ha-card {
+                        z-index: 99 !important;
+                        position: relative !important;
+                        pointer-events: auto !important;
+                      }
+                  entities:
+                    - entity: input_text.chore_13_time
+                      name: Time
+                      icon: mdi:clock-outline
                 - type: custom:mushroom-entity-card
                   entity: input_boolean.chore_13_done
                   name: Completed
@@ -3743,12 +3912,17 @@ views:
               cards:
                 - type: entities
                   show_header_toggle: false
+                  card_mod:
+                    style: |
+                      ha-card {
+                        z-index: 99 !important;
+                        position: relative !important;
+                        pointer-events: auto !important;
+                      }
                   entities:
-                    - type: custom:text-input-row
-                      entity: input_text.chore_14_title
-                      name: Time
-                      icon: mdi:clock-outline
-                      placeholder: HH:MM
+                    - entity: input_text.chore_14_title
+                      name: Chore Title
+                      icon: mdi:format-text
                 - type: custom:mushroom-chips-card
                   alignment: center
                   chips:
@@ -3904,11 +4078,19 @@ views:
                   entity: input_number.chore_14_price
                   name: Price
                   icon: mdi:cash
-                - type: custom:text-input-row
-                  entity: input_text.chore_14_time
-                  name: Time
-                  icon: mdi:clock-outline
-                  placeholder: HH:MM
+                - type: entities
+                  show_header_toggle: false
+                  card_mod:
+                    style: |
+                      ha-card {
+                        z-index: 99 !important;
+                        position: relative !important;
+                        pointer-events: auto !important;
+                      }
+                  entities:
+                    - entity: input_text.chore_14_time
+                      name: Time
+                      icon: mdi:clock-outline
                 - type: custom:mushroom-entity-card
                   entity: input_boolean.chore_14_done
                   name: Completed
@@ -4049,12 +4231,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_15_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_15_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -4210,11 +4397,19 @@ views:
                         entity: input_number.chore_15_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_15_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_15_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_15_done
                         name: Completed
@@ -4317,12 +4512,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_16_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_16_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -4478,11 +4678,19 @@ views:
                         entity: input_number.chore_16_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_16_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_16_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_16_done
                         name: Completed
@@ -4584,12 +4792,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_17_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_17_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -4745,11 +4958,19 @@ views:
                         entity: input_number.chore_17_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_17_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_17_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_17_done
                         name: Completed
@@ -4851,12 +5072,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_18_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_18_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -5012,11 +5238,19 @@ views:
                         entity: input_number.chore_18_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_18_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_18_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_18_done
                         name: Completed
@@ -5118,12 +5352,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_19_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_19_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -5279,11 +5518,19 @@ views:
                         entity: input_number.chore_19_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_19_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_19_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_19_done
                         name: Completed
@@ -5385,12 +5632,17 @@ views:
                     cards:
                       - type: entities
                         show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
                         entities:
-                          - type: custom:text-input-row
-                            entity: input_text.chore_20_title
-                            name: Time
-                            icon: mdi:clock-outline
-                            placeholder: HH:MM
+                          - entity: input_text.chore_20_title
+                            name: Chore Title
+                            icon: mdi:format-text
                       - type: custom:mushroom-chips-card
                         alignment: center
                         chips:
@@ -5546,11 +5798,19 @@ views:
                         entity: input_number.chore_20_price
                         name: Price
                         icon: mdi:cash
-                      - type: custom:text-input-row
-                        entity: input_text.chore_20_time
-                        name: Time
-                        icon: mdi:clock-outline
-                        placeholder: HH:MM
+                      - type: entities
+                        show_header_toggle: false
+                        card_mod:
+                          style: |
+                            ha-card {
+                              z-index: 99 !important;
+                              position: relative !important;
+                              pointer-events: auto !important;
+                            }
+                        entities:
+                          - entity: input_text.chore_20_time
+                            name: Time
+                            icon: mdi:clock-outline
                       - type: custom:mushroom-entity-card
                         entity: input_boolean.chore_20_done
                         name: Completed
